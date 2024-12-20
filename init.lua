@@ -1,4 +1,3 @@
--- BUG: tui中zlua目录同步存在一步延迟, 也就是说zlua到某个目录之后需要切换一次目录才会同步zlua的distick
 local state = ya.sync(function()
 	return cx.active.current.cwd
 end)
@@ -37,6 +36,8 @@ local function entry()
 	end
 
 	local target = output.stdout:gsub("\n$", "")
+	local target = target .. "/"
+
 	if target ~= "" then
 		ya.manager_emit(target:find("[/\\]$") and "cd" or "reveal", { target })
 	end
