@@ -6,8 +6,27 @@ local function fail(s, ...)
 	ya.notify({ title = "Fzf", content = string.format(s, ...), timeout = 5, level = "error" })
 end
 
-local cmd_args =
-	[[eval "$(lua ~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-skywind3000-SLASH-z.lua/z.lua --init zsh once enhanced)"; _zlua -l -t | awk '{print $2}' | rg -v '^.home.fengzerong.github.czmod|^.home.fengzerong$|^.home$' | sed -e "s,^$HOME,~," | fzf --bind 'ctrl-y:execute-silent(echo -E {} | osc-copy -n)+abort,tab:accept,ctrl-r:toggle-sort' --reverse --inline-info +s --tac --height 100% ]]
+local uname = io.popen("uname"):read("*l")
+local zlua
+
+if uname == "Darwin" then
+	-- macOS 系统
+	zlua =
+		[[eval "$(lua ~/Library/Caches/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-skywind3000-SLASH-z.lua/z.lua --init zsh once enhanced)"]]
+elseif uname == "Linux" then
+	-- Linux 系统
+	zlua =
+		[[eval "$(lua ~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-skywind3000-SLASH-z.lua/z.lua --init zsh once enhanced)"]]
+else
+	fail("Unsupported OS: " .. uname)
+	return
+end
+
+local cmd_args = zlua
+	.. [[; _zlua -l -t | awk '{print $2}' | rg -v '^.home.fengzerong.github.czmod|^.home.fengzerong$|^.home$' | sed -e "s,^$HOME,~," | fzf --bind 'ctrl-y:execute-silent(echo -E {} | osc-copy -n)+abort,tab:accept,ctrl-r:toggle-sort' --reverse --inline-info +s --tac --height 100% ]]
+
+-- for debug
+-- ya.notify({ title = "dirstack", content = cmd_args, timeout = 5, level = "info" })
 
 local function entry()
 	local _permit = ya.hide()
@@ -37,12 +56,12 @@ local function entry()
 	local target = output.stdout:gsub("\n$", "")
 
 	if target == "" then
-		target = "$HOME" .. "/"
+		target = cwd .. "/"
 	else
 		target = target .. "/"
 	end
 
-	ya.notify({ title = "dirstack", content = "Go to " .. target, timeout = 2, level = "info" })
+	ya.notify({ title = "dirstack", content = "Go to " .. target, timeout = 1, level = "info" })
 
 	if target ~= "" then
 		ya.manager_emit(target:find("[/\\]$") and "cd" or "reveal", { target })
