@@ -7,7 +7,7 @@ local function fail(s, ...)
 end
 
 local cmd_args =
-	[[eval "$(lua ~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-skywind3000-SLASH-z.lua/z.lua --init zsh enhanced)"; _zlua -l -t | awk '{print $2}' | sed -e "s,^$HOME,~," | fzf --bind 'ctrl-y:execute-silent(echo -E {} | osc-copy -n)+abort,tab:accept,ctrl-r:toggle-sort' --reverse --inline-info +s --tac --height 100% ]]
+	[[eval "$(lua ~/.cache/antidote/https-COLON--SLASH--SLASH-github.com-SLASH-skywind3000-SLASH-z.lua/z.lua --init zsh once enhanced)"; _zlua -l -t | awk '{print $2}' | rg -v '^.home.fengzerong.github.czmod|^.home.fengzerong$|^.home$' | sed -e "s,^$HOME,~," | fzf --bind 'ctrl-y:execute-silent(echo -E {} | osc-copy -n)+abort,tab:accept,ctrl-r:toggle-sort' --reverse --inline-info +s --tac --height 100% ]]
 
 local function entry()
 	local _permit = ya.hide()
@@ -17,8 +17,7 @@ local function entry()
 		:args({ "-c", cmd_args })
 		:cwd(cwd)
 		:env("_ZL_HYPHEN", 1)
-		:env("_ZL_ADD_ONCE", 0)
-		:env("_ZL_EXCLUDE_DIRS", "/home/fengzerong/github/czmod,/home/fengzerong,/mnt")
+		:env("_ZL_ADD_ONCE", 1)
 		:stdin(Command.INHERIT)
 		:stdout(Command.PIPED)
 		:stderr(Command.INHERIT)
@@ -36,7 +35,14 @@ local function entry()
 	end
 
 	local target = output.stdout:gsub("\n$", "")
-	local target = target .. "/"
+
+	if target == "" then
+		target = "$HOME" .. "/"
+	else
+		target = target .. "/"
+	end
+
+	ya.notify({ title = "dirstack", content = "Go to " .. target, timeout = 2, level = "info" })
 
 	if target ~= "" then
 		ya.manager_emit(target:find("[/\\]$") and "cd" or "reveal", { target })
