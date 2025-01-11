@@ -36,7 +36,7 @@ local function entry()
 		:args({ "-c", cmd_args })
 		:cwd(cwd)
 		:env("_ZL_HYPHEN", 1)
-		:env("_ZL_ADD_ONCE", 1)
+		:env("_ZL_ADD_ONCE", 0)
 		:stdin(Command.INHERIT)
 		:stdout(Command.PIPED)
 		:stderr(Command.INHERIT)
@@ -56,16 +56,15 @@ local function entry()
 	local target = output.stdout:gsub("\n$", "")
 
 	if target == "" then
-		target = cwd .. "/"
+		-- target = cwd .. "/"
+		ya.notify({ title = "dirstack", content = "Cancel jump", timeout = 1, level = "info" })
 	else
 		target = target .. "/"
-	end
+		ya.notify({ title = "dirstack", content = "Go to " .. target, timeout = 1, level = "info" })
 
-	ya.notify({ title = "dirstack", content = "Go to " .. target, timeout = 1, level = "info" })
-
-	if target ~= "" then
-		ya.manager_emit(target:find("[/\\]$") and "cd" or "reveal", { target })
+		if target ~= "" then
+			ya.manager_emit(target:find("[/\\]$") and "cd" or "reveal", { target })
+		end
 	end
 end
-
 return { entry = entry }
